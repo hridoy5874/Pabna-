@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Shield, Briefcase, Landmark, Menu, Bell, Search, Map as MapIcon, Navigation, ChevronRight, HeartPulse, Pill, Camera, X, Plus, MessageSquare, Heart, Image } from 'lucide-react';
+import { MapPin, Shield, Briefcase, Landmark, Menu, Bell, Search, Map as MapIcon, Navigation, ChevronRight, HeartPulse, Pill, Camera, X, Plus, MessageSquare, Heart, Image, Maximize } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const MapPinItem = ({ top, left, color, icon, pulse }: { top: string, left: string, color: string, icon: React.ReactNode, pulse?: boolean }) => (
@@ -15,7 +15,7 @@ const MapPinItem = ({ top, left, color, icon, pulse }: { top: string, left: stri
   </div>
 );
 
-const AbstractMap = () => (
+const AbstractMap = ({ showMyLocation, onLocate, onOpenFullMap }: { showMyLocation?: boolean, onLocate?: () => void, onOpenFullMap?: () => void }) => (
   <div className="relative w-full h-full bg-theme-border rounded-[1.5rem] overflow-hidden shadow-[inset_4px_-4px_8px_#d1d1d9,inset_-4px_4px_8px_#ffffff]">
     {/* Map graphic */}
     <svg className="absolute inset-0 w-full h-full opacity-50" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice">
@@ -35,9 +35,16 @@ const AbstractMap = () => (
     <MapPinItem top="50%" left="75%" color="bg-river-blue" icon={<Shield size={14} className="text-white" />} />
     <MapPinItem top="20%" left="65%" color="bg-gray-700" icon={<Landmark size={14} className="text-white" />} />
     
+    {showMyLocation && (
+      <MapPinItem top="55%" left="50%" color="bg-blue-500" icon={<div className="w-3 h-3 bg-white rounded-full" />} pulse />
+    )}
+
     {/* Glassmorphic overlay for map controls */}
     <div className="absolute bottom-3 right-3 flex flex-col gap-2">
-      <button className="w-10 h-10 rounded-full neu-glass flex items-center justify-center text-main hover:text-river-blue transition-colors">
+      <button onClick={onOpenFullMap} className="w-10 h-10 rounded-full neu-glass flex items-center justify-center text-main hover:text-river-blue transition-colors" title="Open Interactive Map">
+        <Maximize size={18} />
+      </button>
+      <button onClick={onLocate} className="w-10 h-10 rounded-full neu-glass flex items-center justify-center text-main hover:text-river-blue transition-colors" title="My Location">
         <Navigation size={18} />
       </button>
     </div>
@@ -56,6 +63,8 @@ export default function App() {
   const [theme, setTheme] = useState('light');
   const [customBg, setCustomBg] = useState<string | null>(null);
   const [gigFilter, setGigFilter] = useState('');
+  const [showMyLocation, setShowMyLocation] = useState(false);
+  const [isFullMapOpen, setIsFullMapOpen] = useState(false);
 
   const [profile, setProfile] = useState({
     name: 'Hridoy Khan',
@@ -77,6 +86,7 @@ export default function App() {
   const [editPostContent, setEditPostContent] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
+  const [feedSearch, setFeedSearch] = useState('');
 
   const [gigs, setGigs] = useState([
     { id: 1, title: 'Need a plumber ASAP', price: '৳500', loc: 'Radhanagar', color: 'text-jute-green', image: null as string | null },
@@ -204,7 +214,20 @@ export default function App() {
             <div className="neu-pressed rounded-2xl p-4 flex flex-col gap-3">
               <p className="text-sm text-main"><strong>Name:</strong> {profile.name}</p>
               <p className="text-sm text-main"><strong>Status:</strong> {profile.status}</p>
-              <p className="text-sm text-main"><strong>Location:</strong> {profile.location}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-main"><strong>Location:</strong> {profile.location}</p>
+                <button 
+                  onClick={() => { 
+                    setActiveModal(null); 
+                    setActiveTab('home'); 
+                    setShowMyLocation(true); 
+                  }} 
+                  className="w-8 h-8 rounded-full neu-flat flex items-center justify-center text-river-blue active:neu-pressed" 
+                  title="View on Map"
+                >
+                  <MapIcon size={14} />
+                </button>
+              </div>
             </div>
             <button onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }} className="neu-flat rounded-xl py-3 text-sm font-bold text-river-blue mt-2 active:neu-pressed">Edit Profile</button>
             <button onClick={() => setActiveModal(null)} className="neu-flat rounded-xl py-3 text-sm font-bold text-terracotta active:neu-pressed">Close</button>
@@ -227,9 +250,11 @@ export default function App() {
                 <span className="text-sm text-main font-medium">Push Notifications</span>
                 <div className="w-10 h-6 rounded-full neu-pressed flex items-center px-1"><div className="w-4 h-4 rounded-full bg-river-blue"></div></div>
               </div>
-              <div className="neu-flat rounded-2xl p-4 flex justify-between items-center">
+              <div className="neu-flat rounded-2xl p-4 flex justify-between items-center cursor-pointer" onClick={() => setShowMyLocation(!showMyLocation)}>
                 <span className="text-sm text-main font-medium">Location Services</span>
-                <div className="w-10 h-6 rounded-full neu-pressed flex items-center px-1"><div className="w-4 h-4 rounded-full bg-river-blue"></div></div>
+                <div className={`w-10 h-6 rounded-full neu-pressed flex items-center px-1 transition-colors ${showMyLocation ? 'bg-river-blue/20' : ''}`}>
+                  <div className={`w-4 h-4 rounded-full transition-transform ${showMyLocation ? 'bg-river-blue translate-x-4' : 'bg-gray-400'}`}></div>
+                </div>
               </div>
             </div>
           </div>
@@ -239,7 +264,7 @@ export default function App() {
           <div className="flex flex-col gap-4">
             <div className="neu-pressed rounded-2xl p-4 text-sm text-main">
               <p>Need assistance? Contact our support team at:</p>
-              <p className="font-bold text-river-blue mt-2">support@pabnaconnect.com</p>
+              <p className="font-bold text-river-blue mt-2">support@dearpabna.com</p>
               <p className="font-bold text-river-blue">01700-000000</p>
             </div>
           </div>
@@ -296,7 +321,7 @@ export default function App() {
           {/* Header */}
           <header className="pt-12 pb-4 px-6 flex items-center justify-between sticky top-0 bg-bg-neu/80 backdrop-blur-md z-40">
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-main">Pabna<span className="text-river-blue">Connect</span></h1>
+              <h1 className="text-2xl font-black tracking-tight text-main">Dear <span className="text-river-blue">Pabna</span></h1>
               <p className="text-[10px] font-bold text-light tracking-widest uppercase mt-0.5">
                 {activeTab === 'home' ? 'Community Dashboard' : activeTab === 'search' ? 'Search' : activeTab === 'gigs' ? 'Local Gigs' : 'Menu'}
               </p>
@@ -322,11 +347,33 @@ export default function App() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="h-[240px] w-full rounded-[2rem] neu-pressed p-2 relative"
               >
-                 <AbstractMap />
+                 <AbstractMap showMyLocation={showMyLocation} onLocate={() => setShowMyLocation(true)} onOpenFullMap={() => setIsFullMapOpen(true)} />
               </motion.section>
 
               {/* Modules Grid */}
               <section className="flex flex-col gap-6">
+                 {/* Community Feed Shortcut */}
+                 <motion.div 
+                   onClick={() => setActiveTab('feed')}
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ duration: 0.6, delay: 0.05, ease: "easeOut" }}
+                   className="neu-flat rounded-[2rem] p-5 flex items-center justify-between cursor-pointer active:neu-pressed-sm transition-all border-2 border-river-blue/10"
+                 >
+                   <div className="flex items-center gap-4">
+                     <div className="relative w-14 h-14 rounded-full neu-pressed flex items-center justify-center text-river-blue">
+                       <MessageSquare size={24} className="relative z-10" />
+                     </div>
+                     <div>
+                       <h3 className="font-bold text-main text-sm">Community Feed</h3>
+                       <p className="text-[11px] text-muted font-medium mt-0.5">See what's happening in Pabna</p>
+                     </div>
+                   </div>
+                   <div className="w-8 h-8 rounded-full neu-pressed-sm flex items-center justify-center">
+                     <ChevronRight size={16} className="text-light" />
+                   </div>
+                 </motion.div>
+
                  {/* Emergency Services */}
                  <motion.div 
                    onClick={() => setActiveModal('emergency')}
@@ -520,6 +567,30 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-main">Community Feed</h2>
               </div>
+
+              {/* Facebook Group Banner */}
+              <a href="https://www.facebook.com/share/g/1aUz3unauN/" target="_blank" rel="noopener noreferrer" className="neu-flat rounded-2xl p-4 flex items-center justify-between bg-[#1877F2]/5 border border-[#1877F2]/20 active:scale-95 transition-transform">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-[#1877F2]/30">f</div>
+                  <div>
+                    <h4 className="font-bold text-[#1877F2] text-sm">Pabna Facebook Group</h4>
+                    <p className="text-[10px] text-[#1877F2]/70 font-medium">Tap to view live posts & images</p>
+                  </div>
+                </div>
+                <ChevronRight size={20} className="text-[#1877F2]" />
+              </a>
+
+              {/* Search Feed */}
+              <div className="neu-pressed rounded-full flex items-center px-4 py-3 gap-3">
+                <Search size={18} className="text-light" />
+                <input 
+                  type="text" 
+                  placeholder="Search posts or images..." 
+                  className="bg-transparent border-none outline-none text-sm w-full text-main placeholder-gray-400" 
+                  value={feedSearch}
+                  onChange={(e) => setFeedSearch(e.target.value)}
+                />
+              </div>
               
               {/* Create Post */}
               <div className="neu-flat rounded-2xl p-4 flex flex-col gap-3">
@@ -560,7 +631,7 @@ export default function App() {
 
               {/* Posts List */}
               <div className="flex flex-col gap-6">
-                {posts.map((post, i) => (
+                {posts.filter(post => post.content.toLowerCase().includes(feedSearch.toLowerCase()) || post.author.toLowerCase().includes(feedSearch.toLowerCase())).map((post, i) => (
                   <motion.div key={post.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="neu-flat rounded-2xl p-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -755,6 +826,36 @@ export default function App() {
               </div>
             </motion.div>
           )}
+          {/* Full Interactive Map Modal */}
+          <AnimatePresence>
+            {isFullMapOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-0 z-[60] bg-bg-neu flex flex-col"
+              >
+                <div className="p-4 flex justify-between items-center bg-white/80 backdrop-blur-md shadow-sm z-10 absolute top-0 left-0 right-0">
+                  <h2 className="font-bold text-main">Interactive Map</h2>
+                  <button onClick={() => setIsFullMapOpen(false)} className="w-10 h-10 rounded-full neu-flat flex items-center justify-center text-terracotta active:neu-pressed">
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="flex-1 w-full h-full pt-16">
+                  <iframe 
+                    src="https://maps.google.com/maps?q=Pabna,Bangladesh&t=&z=14&ie=UTF8&iwloc=&output=embed" 
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }} 
+                    allowFullScreen 
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </div>
         
         {/* Bottom Navigation */}
