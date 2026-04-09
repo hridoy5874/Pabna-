@@ -1,0 +1,11 @@
+const fs = require('fs');
+let content = fs.readFileSync('src/App.tsx', 'utf8');
+content = content.replace(/text-gray-800/g, 'text-main');
+content = content.replace(/text-gray-700/g, 'text-main');
+content = content.replace(/text-gray-600/g, 'text-muted');
+content = content.replace(/text-gray-500/g, 'text-muted');
+content = content.replace(/text-gray-400/g, 'text-light');
+content = content.replace(/bg-\[#E8E8ED\]/g, 'bg-theme-border');
+content = content.replace(/border-\[#E8E8EC\]/g, 'border-theme');
+fs.writeFileSync('src/App.tsx', content);
+console.log('Replaced successfully');
